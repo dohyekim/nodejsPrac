@@ -1,23 +1,41 @@
 const express = require('express');
-let bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
+const fs = require('fs');
 
 const app = express(); //express() returns an object;
 const port = 3000;
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
 app.use(express.static('public')); //where static files exist
 app.use(bodyParser.urlencoded({ extended: false})); //applicaion으로 들어오는 모든 요청들은 bodyParser라고 하는 미들웨어를 먼저 통과한 다음에 route가 동작하게 된다.
 
 app.set('views', './views');
-app.set('view engine', 'pug');
+app.set('view engine', 'pug'); //어떤 template engine을 사용할 건지
 
 if (app.get('env') === 'development') {
     app.locals.pretty = true;
 }
 
-app.get('/form', (req, res) => {
+app.post('/program', (req, res) => {
+    let title = req.body.name,
+        description = req.body.description;
+    fs.writeFile('data/'+title, description, (err) => {
+        if(err) {
+            res.status(500).send('Internal Servr Error')
+        }
+        res.send('Success');
+    });
+    // res.render('program', {title: title, description: description});
+});
 
+app.get('/program/new', (req, res) => {
+    res.render('newform');
+});
+
+app.get('/form', (req, res) => {
     res.render('form');
-})
+});
 
 app.post('/form_receiver', (req, res) => {
     let title = req.body.title,
@@ -113,21 +131,3 @@ app.get('/', (req, res) =>
     res.send(`Hello World!`));
 app.get('/login', (req, res) => res.send('<h1>Login Please</h1>'));
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
-
-// const http = require('http');
-
-// const hostname = '127.0.0.1';
-// const port = 3000;
-
-// const http = require('http');
-
-// const hostname = '127.0.0.1';
-// const port = 3000;
-
-// http.createServer( (req, res) => {
-//     res.writeHead(200, {'Content-Type' : 'text/plain'});
-//     res.end('Hello World\n');
-// }).listen(port, hostname, () => {
-//     console.log(`Server running at http://${hostname}:${port}/`);
-// });
