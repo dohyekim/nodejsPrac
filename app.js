@@ -4,6 +4,20 @@ const port = 3000;
 
 app.use(express.static('public')); //where static files exist
 
+app.set('views', './views');
+app.set('view engine', 'pug');
+
+if (app.get('env') === 'development') {
+    app.locals.pretty = true;
+}
+
+app.get('/prettify', (req, res) => {
+    res.render('beforePrettified')
+})
+app.get('/pug', (req, res) => {
+    res.render('index', { title : 'Pug Practice', message: 'Hi there!', time: Date() });
+});
+
 app.get('/dynamic', (req, res) => {
     let lis = '';
     for (let i = 0; i < 5; i++) {
