@@ -4,6 +4,32 @@ const port = 3000;
 
 app.use(express.static('public')); //where static files exist
 
+app.get('/dynamic', (req, res) => {
+    let lis = '';
+    for (let i = 0; i < 5; i++) {
+        lis += `<li>coding${i+1}</li>`
+    }
+    let time = Date();
+    let output = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Document</title>
+    </head>
+    <body>
+        Hello Dynamic(HTML)!
+        <ul>
+        ${lis}
+        </ul>
+        Current Time : ${time}
+    </body>
+    </html>
+    `;
+    res.send(output);
+})
 app.get('/imgroute', (req, res) => 
     res.send('Hello Router, <img src="/star.png">'));
 app.get('/', (req, res) => 
