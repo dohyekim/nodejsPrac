@@ -11,8 +11,59 @@ if (app.get('env') === 'development') {
     app.locals.pretty = true;
 }
 
+app.get('/form', (req, res) => {
+    res.render('form');
+})
+
+app.get('/form_receiver', (req, res) => {
+    let title = req.query.title;
+    let description  = req.query.description;
+    res.send(`title ---> ${title}, description ---> ${description}`)
+})
+
+app.get('/topicParam/:id/:name', (req, res) => {
+    let topicId = req.params.id;
+    let topicName = req.params.name;
+    // console.dir(topicId);
+    let topics = [
+        'Javascript is ...',
+        'Nodejs is ...',
+        'Express is...'
+    ];
+    console.dir(req.params) //{ id: '0', name: 'js' }
+
+    res.send(links = `
+    <a href='/topic/0/js'>Javascript</a><br>
+    <a href='/topic/1/js'>Nodejs</a><br> 
+    <a href='/topic/2'>Express</a><br><br>
+    <div>${topics[topicId]}<span>${topicName}</span</div>
+
+`)
+
+})
+
+app.get('/topicQuery', (req, res) => {
+    let topicId = req.query.id,
+        topicName = req.query.name;
+    let topics = [
+        'Javascript is ...',
+        'Nodejs is ...',
+        'Express is...'
+    ];
+    var links = `
+        <a href='/topic?id=0'>Javascript</a><br>
+        <a href='/topic?id=1'>Nodejs</a><br> 
+        <a href='/topic?id=2'>Express</a><br><br>
+        <div>${topics[topicId]}</div>
+    `;
+    res.send(links);
+    // res.send(`Id = ${topicId}, Name = ${topicName}`);
+    // console.dir(topicId)
+    // http://localhost:3000/topic?id[one]=1&id[two]=2&name=good
+});
+
 app.get('/prettify', (req, res) => {
-    res.render('beforePrettified')
+    res.render('beforePrettified');
 })
 app.get('/pug', (req, res) => {
     res.render('index', { title : 'Pug Practice', message: 'Hi there!', time: Date() });
