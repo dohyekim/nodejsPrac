@@ -1,11 +1,22 @@
 html   
     head
         meta(charset='utf-8')
+        title GET/POST
     body
-        form(action='/form_receiver')
-            p
-                input(type='text' name='title')
-            p
-                textarea(name='description')
-            p
-                input(type='submit')
+        div For GET method
+            form(action='/form_receiver' method='GET')
+                p
+                    input(type='text' name='title')
+                p
+                    textarea(name='description')
+                p
+                    input(type='submit')
+
+        div For POST method
+            form(action='/form_receiver' method='POST')
+                p
+                    input(type='text' name='title')
+                p
+                    textarea(name='description')
+                p
+                    input(type='submit')

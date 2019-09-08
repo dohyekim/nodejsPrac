@@ -1,8 +1,11 @@
 const express = require('express');
-const app = express(); //express() returns object;
+let bodyParser = require('body-parser');
+
+const app = express(); //express() returns an object;
 const port = 3000;
 
 app.use(express.static('public')); //where static files exist
+app.use(bodyParser.urlencoded({ extended: false})); //applicaion으로 들어오는 모든 요청들은 bodyParser라고 하는 미들웨어를 먼저 통과한 다음에 route가 동작하게 된다.
 
 app.set('views', './views');
 app.set('view engine', 'pug');
@@ -12,12 +15,21 @@ if (app.get('env') === 'development') {
 }
 
 app.get('/form', (req, res) => {
+
     res.render('form');
 })
 
+app.post('/form_receiver', (req, res) => {
+    let title = req.body.title,
+        description = req.body.description;
+    res.send(`Hello, POST method. <br>
+                title is... ${title} <br>
+                Description is...${description}`)
+})
+
 app.get('/form_receiver', (req, res) => {
-    let title = req.query.title;
-    let description  = req.query.description;
+    let title = req.query.title; //get 방식이니까 가능한 것
+    let description  = req.query.description; //get 
     res.send(`title ---> ${title}, description ---> ${description}`)
 })
 
