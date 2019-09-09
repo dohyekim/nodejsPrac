@@ -10,7 +10,7 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
 app.use(express.static('public')); //where static files exist
 app.use(bodyParser.urlencoded({ extended: false})); //applicaion으로 들어오는 모든 요청들은 bodyParser라고 하는 미들웨어를 먼저 통과한 다음에 route가 동작하게 된다.
-app.use(cookieParser()); // 애플리케이션으로 들어오는 정보 중에 cookie를 갖고 있는 요청이 들어오면 얘가 그걸 해석해서 req/res의 cookie관련 작업을 진행할 수 있도록 해줌
+app.use(cookieParser('salt!!!!!!a0w9et2350ak3l')); // 애플리케이션으로 들어오는 정보 중에 cookie를 갖고 있는 요청이 들어오면 얘가 그걸 해석해서 req/res의 cookie관련 작업을 진행할 수 있도록 해줌
 
 app.set('views', './views');
 app.set('view engine', 'pug'); //어떤 template engine을 사용할 건지
@@ -19,15 +19,75 @@ if (app.get('env') === 'development') {
     app.locals.pretty = true;
 }
 
-app.get('/count', (req, res) => {
-    if(req.cookies.count) {
-        var count = parseInt(req.cookies.count); //int화
+let products = {
+    1:{title:'The history of web 1'},
+    2:{title:'The next web'},
+}; //연습용으로, database를 대신하는 객체
+
+app.get('/products', (req, res) => {
+    let output = '';
+    for (let p in products) {
+        output += `<li>
+        <a href="/cart/${p}">
+            ${products[p].title}
+        </a</li>`;
+    }
+    res.send(`<h1>Products</h1>
+                <ul>${output}</ul>
+                <a href="/cart"> Go to Cart </a>`);
+});
+
+/*
+cart = {
+    1(id):1(cnt)
+    1(id):2(cnt)
+    2(id):1(cnt)
+}
+ 
+*/ 
+app.get('/cart', (req, res) => {
+    let cart = req.signedCookies.cart;
+    if (!cart) {
+        res.send('Empty Cart');
     }
     else {
-        var count = 0;
+        let output = '';
+        for (let c in cart) {
+            output += `<li>${products[c].title} (개수: ${cart[c]})</li>`;
+        }
+        res.send(`<h1>Cart </h2>
+                    <ul>${output}</ul>
+                        <a href="/products">Products List</a>`);
+    }
+});
+
+app.get('/cart/:id', (req, res) => {
+    let id = req.params.id;
+    let cart;
+    if (!req.signedCookies.cart) {
+        cart = {};
+    } 
+    else {
+        cart = req.signedCookies.cart;
+    }
+    if (!cart[id]) {
+        cart[id] = 0;
+    } //아직 하나도 안 담은 경우 새로운 id가 들어올 때
+    cart[id] = parseInt(cart[id]) + 1; //개수 더하기 
+    res.cookie('cart', cart, {signed:true});
+    res.redirect('/cart');
+});
+
+app.get('/count', (req, res) => {
+    let count;
+    if(req.signedCookies.count) {
+        count = parseInt(req.signedCookies.count); //int화
+    } //signedCookies: 암호화
+    else {
+        count = 0;
     }
     count = count + 1;
-    res.cookie('count', count);
+    res.cookie('count', count, {signed:true});
     res.send(`Count: ${count}`) //req로 온 cookie 중 count의 값
 })
 
