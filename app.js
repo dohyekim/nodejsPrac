@@ -17,32 +17,31 @@ if (app.get('env') === 'development') {
     app.locals.pretty = true;
 }
 
-app.get('/program/:prog', (req, res) => {
-    let prog = req.params.prog;
+app.get(['/program','/program/:prog'], (req, res) => {
     fs.readdir('data', {encoding:'utf-8'}, (err, files) => {
         if (err) {
             console.error(err);
             res.status(500).send('Internal Server Error');
         }
-
-        fs.readFile('data/'+prog, {encoding: 'utf-8'}, (err, data) => {
-            if(err) {
-                res.status(500).send('Internal Server Error');
-            }
-            res.render('program', {progs: files, title: prog, description: data});
-        })
-    })
-    
-})
-
-app.get('/program', (req, res) => {
-    fs.readdir('data', {encoding:'utf-8'}, (err, files) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send('Internal Server Error');
+        let prog = req.params.prog;
+        // prog값이 있을 때
+        if (prog && prog !== 'new') {
+            console.log("prog>>>", prog)
+            fs.readFile('data/'+prog, {encoding: 'utf-8'}, (err, data) => {
+                if(err) {
+                    res.status(500).send('Internal Server Error');
+                }
+                res.render('program', {progs: files, title: prog, description: data});
+            })
         }
-        res.render('program', {progs: files});
-    })
+        else if(prog === 'new') {
+            res.render('newform')
+        }
+        else {
+            // prog값이 없을 때
+            res.render('program', {progs: files})
+        };
+    });
 });
 
 app.post('/program', (req, res) => {
@@ -51,15 +50,12 @@ app.post('/program', (req, res) => {
     fs.writeFile('data/'+title, description, (err) => {
         if(err) {
             res.status(500).send('Internal Server Error');
-        };
+        }
+        res.redirect('/program')
 
     });
-    // res.render('program', {title: title, description: description});
 });
 
-app.get('/program/new', (req, res) => {
-    res.render('newform');
-});
 
 app.get('/form', (req, res) => {
     res.render('form');

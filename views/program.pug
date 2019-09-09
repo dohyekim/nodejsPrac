@@ -2,11 +2,25 @@ html
     header
         title Tools for Programming
     body
-        h1 Server Side Javascript
+        h1 
+            a(href='/program') Server Side Javascript
         ul
             each prog in progs
                 li
                     a(href='/program/'+prog)= prog
-        article
-            h2= title
-            h4= description
+
+        if title
+            article
+                h2= title
+                h4= description
+        else
+            div Lists
+        
+        div 
+            form(action="/program" method='POST')
+                p
+                    input(type="text" name="title" placeholder="Title")
+                p
+                    textarea(name="description" placeholder="Description...")
+                p
+                    input(type="submit")
