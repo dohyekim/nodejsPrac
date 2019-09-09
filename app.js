@@ -17,14 +17,42 @@ if (app.get('env') === 'development') {
     app.locals.pretty = true;
 }
 
+app.get('/program/:prog', (req, res) => {
+    let prog = req.params.prog;
+    fs.readdir('data', {encoding:'utf-8'}, (err, files) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+
+        fs.readFile('data/'+prog, {encoding: 'utf-8'}, (err, data) => {
+            if(err) {
+                res.status(500).send('Internal Server Error');
+            }
+            res.render('program', {progs: files, title: prog, description: data});
+        })
+    })
+    
+})
+
+app.get('/program', (req, res) => {
+    fs.readdir('data', {encoding:'utf-8'}, (err, files) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+        }
+        res.render('program', {progs: files});
+    })
+});
+
 app.post('/program', (req, res) => {
-    let title = req.body.name,
+    let title = req.body.title,
         description = req.body.description;
     fs.writeFile('data/'+title, description, (err) => {
         if(err) {
-            res.status(500).send('Internal Servr Error')
-        }
-        res.send('Success');
+            res.status(500).send('Internal Server Error');
+        };
+
     });
     // res.render('program', {title: title, description: description});
 });

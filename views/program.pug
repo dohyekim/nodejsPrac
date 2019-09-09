@@ -2,10 +2,11 @@ html
     header
         title Tools for Programming
     body
-        h1 Server Side JavaScript
+        h1 Server Side Javascript
         ul
-            li t 
-        h3= title
-        h5= description
-        div
-            button new
+            each prog in progs
+                li
+                    a(href='/program/'+prog)= prog
+        article
+            h2= title
+            h4= description
