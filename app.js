@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const cookieParser = require('cookie-parser');
 
 const app = express(); //express() returns an object;
 const port = 3000;
@@ -9,6 +10,7 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
 app.use(express.static('public')); //where static files exist
 app.use(bodyParser.urlencoded({ extended: false})); //applicaion으로 들어오는 모든 요청들은 bodyParser라고 하는 미들웨어를 먼저 통과한 다음에 route가 동작하게 된다.
+app.use(cookieParser()); // 애플리케이션으로 들어오는 정보 중에 cookie를 갖고 있는 요청이 들어오면 얘가 그걸 해석해서 req/res의 cookie관련 작업을 진행할 수 있도록 해줌
 
 app.set('views', './views');
 app.set('view engine', 'pug'); //어떤 template engine을 사용할 건지
@@ -16,6 +18,18 @@ app.set('view engine', 'pug'); //어떤 template engine을 사용할 건지
 if (app.get('env') === 'development') {
     app.locals.pretty = true;
 }
+
+app.get('/count', (req, res) => {
+    if(req.cookies.count) {
+        var count = parseInt(req.cookies.count); //int화
+    }
+    else {
+        var count = 0;
+    }
+    count = count + 1;
+    res.cookie('count', count);
+    res.send(`Count: ${count}`) //req로 온 cookie 중 count의 값
+})
 
 app.get(['/program','/program/:prog'], (req, res) => {
     fs.readdir('data', {encoding:'utf-8'}, (err, files) => {
