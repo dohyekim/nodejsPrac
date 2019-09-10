@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
 
 const app = express(); //express() returns an object;
 const port = 3000;
@@ -11,6 +12,11 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 app.use(express.static('public')); //where static files exist
 app.use(bodyParser.urlencoded({ extended: false})); //applicaion으로 들어오는 모든 요청들은 bodyParser라고 하는 미들웨어를 먼저 통과한 다음에 route가 동작하게 된다.
 app.use(cookieParser('salt!!!!!!a0w9et2350ak3l')); // 애플리케이션으로 들어오는 정보 중에 cookie를 갖고 있는 요청이 들어오면 얘가 그걸 해석해서 req/res의 cookie관련 작업을 진행할 수 있도록 해줌
+app.use(session({
+    secret: 'thYisiWs@%se5@s6Qsio^Wynsaltwow3w', //session ID를 심을 때 첨가될 salt
+    resave: false, // sessionID를 접속할 때마다 새로 발급하지 마라 
+    saveUninitialized: true //session ID를 실제로 사용하기 전까지는 발급하지 마라
+}))
 
 app.set('views', './views');
 app.set('view engine', 'pug'); //어떤 template engine을 사용할 건지
@@ -20,10 +26,82 @@ if (app.get('env') === 'development') {
 }
 
 let products = {
-    1:{title:'The history of web 1'},
-    2:{title:'The next web'},
+    1:{title: 'The history of web 1'},
+    2:{title: 'The next web'},
 }; //연습용으로, database를 대신하는 객체
 
+//Logout
+app.get('/auth/logout', (req, res) => {
+    delete req.session.displayName;
+    res.redirect('/welcome');
+})
+
+// Login
+app.get('/welcome', (req, res) => {
+    if (req.session.displayName) {
+        res.send(`
+            <h1> Hello, ${req.session.displayName}</h1>
+            <a href="/auth/logout">Logout</a>`);
+    }
+    else {
+        res.send(`
+            <h1> Welcome </h1>
+            <a href="/auth/login">Login</a>`);
+    };
+});
+
+app.post('/auth/login', (req, res) => {
+    let sampleUser = {
+        username: 'TestUser',
+        passwd: '1111', // Only for Test
+        displayName: 'TestNickname'
+    };
+    let username = req.body.username,
+        passwd = req.body.password;
+    if (username === sampleUser.username && passwd === sampleUser.passwd) {
+        req.session.displayName = sampleUser.displayName;
+        res.redirect('/welcome')
+    }
+    else {
+        res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`);
+    }
+})
+app.get('/auth/login', (req, res) => {
+    let output = `
+        <h1>Login</h1>
+        <form action="/auth/login" method="POST">
+            <p>
+                <input type="text" name="username" placeholder="username">
+            </p>
+            <p>
+                <input type="password" name="password" placeholder="password">
+            </p>
+            <p>
+                <input type="submit">
+            </p>
+        </form>
+    `;
+
+    res.send(output)
+});
+
+//Session
+app.get('/session', (req, res) => {
+    if (req.session.count) {
+        req.session.count++;
+    }
+    else {
+        req.session.count = 1; //서버에 count값 설정
+    }
+    res.send('Hi Session, count =' + req.session.count);
+});
+
+//Session tmp router
+app.get('/tmp', (req, res) => {
+    res.send('result: ' + req.session.count);
+});
+
+//Cookie
 app.get('/products', (req, res) => {
     let output = '';
     for (let p in products) {
@@ -91,6 +169,7 @@ app.get('/count', (req, res) => {
     res.send(`Count: ${count}`) //req로 온 cookie 중 count의 값
 })
 
+//parameter
 app.get(['/program','/program/:prog'], (req, res) => {
     fs.readdir('data', {encoding:'utf-8'}, (err, files) => {
         if (err) {
