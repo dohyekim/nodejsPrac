@@ -1,16 +1,20 @@
 const express = require('express');
 const app = express(); //express() returns an object;
-const session = require('express-session');
-const FileStore = require('session-file-store')(session);
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 
 
 
 const port = 3000;
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+app.use(express.static('public')); //where static files exist
+app.use(bodyParser.urlencoded({ extended: false})); //applicaion으로 들어오는 모든 요청들은 bodyParser라고 하는 미들웨어를 먼저 통과한 다음에 route가 동작하게 된다.
+app.use(cookieParser('salt!!!!!!a0w9et2350ak3l')); // 애플리케이션으로 들어오는 정보 중에 cookie를 갖고 있는 요청이 들어오면 얘가 그걸 해석해서 req/res의 cookie관련 작업을 진행할 수 있도록 해줌
 app.use(session({
     secret: 'thYisiWs@%se5@s6Qsio^Wynsaltwow3w', //session ID를 심을 때 첨가될 salt
     resave: false, // sessionID를 접속할 때마다 새로 발급하지 마라 
@@ -18,10 +22,6 @@ app.use(session({
     store: new FileStore, //makes an directory called "sessions" to store session Data
 
 }));
-app.use(express.static('public')); 
-//where static files exist
-app.use(bodyParser.urlencoded({ extended: false})); //applicaion으로 들어오는 모든 요청들은 bodyParser라고 하는 미들웨어를 먼저 통과한 다음에 route가 동작하게 된다.
-app.use(cookieParser('salt!!!!!!a0w9et2350ak3l')); // 애플리케이션으로 들어오는 정보 중에 cookie를 갖고 있는 요청이 들어오면 얘가 그걸 해석해서 req/res의 cookie관련 작업을 진행할 수 있도록 해줌
 
 
 app.set('views', './views');
@@ -38,10 +38,8 @@ let products = {
 
 //Logout
 app.get('/auth/logout', (req, res) => {
-    req.session.destroy( (err) => {
-        res.redirect('/welcome');
-
-    })
+    delete req.session.displayName;
+    res.redirect('/welcome');
 })
 
 // Login
@@ -68,9 +66,7 @@ app.post('/auth/login', (req, res) => {
         passwd = req.body.password;
     if (username === sampleUser.username && passwd === sampleUser.passwd) {
         req.session.displayName = sampleUser.displayName;
-        req.session.save( (err) => {
-            res.redirect('/welcome')
-        });
+        res.redirect('/welcome')
     }
     else {
         res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`);
