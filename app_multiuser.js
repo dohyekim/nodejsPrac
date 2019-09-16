@@ -5,7 +5,7 @@ const MySQLStore = require('express-mysql-session')(session);
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const cookieParser = require('cookie-parser');
-const md5 = require('md5');
+const sha256 = require('sha256');
 
 
 const port = 3000;
@@ -72,15 +72,27 @@ app.get('/welcome', (req, res) => {
     };
 });
 
+// > const md5 = require('md5');
+// undefined
+// > let salt = "aetaeywaecaeate131241";
+// undefined
+// > let pwd = '111';
+// undefined
+// > md5(pwd+salt)
+// '9e02e269cfa207501059052f868a5291'
+// > 
+let salt = "aetaeywaecaeate131241";
+let sampleUser = {
+    username: 'TestUser',
+    passwd: '9e02e269cfa207501059052f868a5291', // made through md5 hash(Not used anymore) with salt
+    displayName: 'TestNickname'
+};
+
 app.post('/auth/login', (req, res) => {
-    let sampleUser = {
-        username: 'TestUser',
-        passwd: '698d51a19d8a121ce581499d7b701668', // made through md5 hash(Not used anymore)
-        displayName: 'TestNickname'
-    };
+
     let username = req.body.username,
         passwd = req.body.password;
-    if (username === sampleUser.username && md5(passwd) === sampleUser.passwd) {
+    if (username === sampleUser.username && md5(passwd+salt) === sampleUser.passwd) {
         req.session.displayName = sampleUser.displayName;
         req.session.save( (err) => {
             res.redirect('/welcome')
@@ -119,79 +131,3 @@ app.get('/session', (req, res) => {
     }
     res.send('Hi Session, count =' + req.session.count);
 });
-
-//Session tmp router
-app.get('/tmp', (req, res) => {
-    res.send('result: ' + req.session.count);
-});
-
-//Cookie
-app.get('/products', (req, res) => {
-    let output = '';
-    for (let p in products) {
-        output += `<li>
-        <a href="/cart/${p}">
-            ${products[p].title}
-        </a</li>`;
-    }
-    res.send(`<h1>Products</h1>
-                <ul>${output}</ul>
-                <a href="/cart"> Go to Cart </a>`);
-});
-
-/*
-cart = {
-    1(id):1(cnt)
-    1(id):2(cnt)
-    2(id):1(cnt)
-}
- 
-*/ 
-app.get('/cart', (req, res) => {
-    let cart = req.signedCookies.cart;
-    if (!cart) {
-        res.send('Empty Cart');
-    }
-    else {
-        let output = '';
-        for (let c in cart) {
-            output += `<li>${products[c].title} (개수: ${cart[c]})</li>`;
-        }
-        res.send(`<h1>Cart </h2>
-                    <ul>${output}</ul>
-                        <a href="/products">Products List</a>`);
-    }
-});
-
-app.get('/cart/:id', (req, res) => {
-    let id = req.params.id;
-    let cart;
-    if (!req.signedCookies.cart) {
-        cart = {};
-    } 
-    else {
-        cart = req.signedCookies.cart;
-    }
-    if (!cart[id]) {
-        cart[id] = 0;
-    } //아직 하나도 안 담은 경우 새로운 id가 들어올 때
-    cart[id] = parseInt(cart[id]) + 1; //개수 더하기 
-    res.cookie('cart', cart, {signed:true});
-    res.redirect('/cart');
-});
-
-app.get('/count', (req, res) => {
-    let count;
-    if(req.signedCookies.count) {
-        count = parseInt(req.signedCookies.count); //int화
-    } //signedCookies: 암호화
-    else {
-        count = 0;
-    }
-    count = count + 1;
-    res.cookie('count', count, {signed:true});
-    res.send(`Count: ${count}`) //req로 온 cookie 중 count의 값
-})
-
-
-// sessionStore.close();
