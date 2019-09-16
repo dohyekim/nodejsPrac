@@ -58,12 +58,14 @@ app.get('/welcome', (req, res) => {
     };
 });
 
+let sampleUser = {
+    username: 'TestUser',
+    passwd: '1111', // Only for Test
+    displayName: 'TestNickname'
+};
+
 app.post('/auth/login', (req, res) => {
-    let sampleUser = {
-        username: 'TestUser',
-        passwd: '1111', // Only for Test
-        displayName: 'TestNickname'
-    };
+
     let username = req.body.username,
         passwd = req.body.password;
     if (username === sampleUser.username && passwd === sampleUser.passwd) {
@@ -76,6 +78,7 @@ app.post('/auth/login', (req, res) => {
         res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`);
     }
 })
+
 app.get('/auth/login', (req, res) => {
     let output = `
         <h1>Login</h1>
@@ -85,6 +88,41 @@ app.get('/auth/login', (req, res) => {
             </p>
             <p>
                 <input type="password" name="password" placeholder="password">
+            </p>
+            <p>
+                <input type="submit">
+            </p>
+        </form>
+    `;
+
+    res.send(output)
+});
+
+app.post('/auth/register', (req, res) => {
+    let user = {
+        username: req.body.username,
+        password: req.body.password,
+        displayName: req.body.displayName};
+    
+    sampleUser.push(user);
+    req.session.displayName = user.username;
+    req.session.save( () => {
+        res.redirect('/welcomd');
+    });
+});
+
+app.get('/auth/register', (req, res) => {
+    let output = `
+        <h1>Register</h1>
+        <form action="/auth/register" method="POST">
+            <p>
+                <input type="text" name="username" placeholder="username">
+            </p>
+            <p>
+                <input type="password" name="password" placeholder="password">
+            </p>
+            <p>
+                <input type="text" name="displayName" placeholder="displayName">
             </p>
             <p>
                 <input type="submit">

@@ -85,43 +85,40 @@ function enc(passwd, salt) {
     return sha256(passwd+salt)
 };
 
-let sampleUser = {
+let sampleUser = [{
     username: 'TestUser',
     passwd: 'rI773M+UXOi2RPu6iDwwgQwf8XJsN+MtMMoldnDWFPxBtKj2QXk9x+xIOQdBtr3mFJj2w+P6GE1A+2N+av0Nz5axrWVOt3Qum4r8UKM3OvcRdUIReMkMlDZ0ROfHRghwcAqubG6KQhTTgyFn7rOb61WdxRnLsTnoWJKbb9ktfjw=', // made through pbkdf2
     displayName: 'TestNickname',
     salt: 'fWgRjxDpwDH5KDYACd2wl+PCnidheQl6ce7N/b+V/2FnxIjU1clm8NtV087add7O56zHdPaXsiYF0NgilfQqxA==',
-};
+}];
 
 app.post('/auth/login', (req, res) => {
 
     let username = req.body.username,
         passwd = req.body.password;
-    
-    if (username === sampleUser.username) {
-        return hasher({password: passwd, salt: sampleUser.salt}, function(err, pass, salt, hash) {
-            if (hash === sampleUser.passwd) {
-                // 인증성공
-                req.session.displayName = sampleUser.displayName;
-                req.session.save( (err) => {
-                    res.redirect('/welcome');
-                });
-            }
-            else {
-                // 인증실패
-                res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`)
-
-            }
-        })
+    for (let i=0; i<sampleUser.length; i++) {
+        let user = sampleUser[i];
+        if (username === user.username) {
+            return hasher({password: passwd, salt: user.salt}, function(err, pass, salt, hash) {
+                if (hash === user.passwd) {
+                    // 인증성공
+                    req.session.displayName = user.displayName;
+                    req.session.save( (err) => {
+                        res.redirect('/welcome');
+                    });
+                }
+                else {
+                    // 인증실패
+                    res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`)
+                }
+            });
+        }
+        else {
+            res.send(`ID not found. <a href="/auth/login">Go to Login</a><br>
+            <a href="/auth/register">Go to Register</a>`)
+        }
     }
-    // if (username === sampleUser.username && md5(passwd+salt) === sampleUser.passwd) {
-    //     req.session.displayName = sampleUser.displayName;
-    //     req.session.save( (err) => {
-    //         res.redirect('/welcome')
-    //     });
-    // }
-    // else {
-    //     res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`);
-    // }
+
 })
 app.get('/auth/login', (req, res) => {
     let output = `
@@ -141,6 +138,46 @@ app.get('/auth/login', (req, res) => {
 
     res.send(output)
 });
+
+
+app.post('/auth/register', (req, res) => {  
+    hasher({password:req.body.password}, function(err, pass, salt, hash){
+        let user = {
+            username: req.body.username,
+            password: hash,
+            salt: salt,
+            displayName: req.body.displayName};
+        
+        sampleUser.push(user);
+        req.session.displayName = user.displayName;
+        req.session.save( () => {
+            res.redirect('/welcome');
+        });
+    });
+});
+
+app.get('/auth/register', (req, res) => {
+    let output = `
+        <h1>Register</h1>
+        <form action="/auth/register" method="POST">
+            <p>
+                <input type="text" name="username" placeholder="username">
+            </p>
+            <p>
+                <input type="password" name="password" placeholder="password">
+            </p>
+            <p>
+                <input type="text" name="displayName" placeholder="displayName">
+            </p>
+            <p>
+                <input type="submit">
+            </p>
+        </form>
+    `;
+
+    res.send(output)
+});
+
 
 //Session
 app.get('/session', (req, res) => {
