@@ -5,8 +5,16 @@ const MySQLStore = require('express-mysql-session')(session);
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const cookieParser = require('cookie-parser');
-const sha256 = require('sha256');
+const bkfd2Password = require('pbkdf2-password');
 
+const hasher = bkfd2Password();
+let opts = {
+    pasword: "userPassword" 
+}
+// error msg, opts.password, salt, encrypted password
+hasher(opts, function(err, pass, salt, hash) {
+    console.log(err, pass, salt, hash)
+})
 
 const port = 3000;
 const options = {
@@ -79,23 +87,41 @@ function enc(passwd, salt) {
 
 let sampleUser = {
     username: 'TestUser',
-    passwd: '9e02e269cfa207501059052f868a5291', // made through md5 hash(Not used anymore) with salt
-    displayName: 'TestNickname'
+    passwd: 'rI773M+UXOi2RPu6iDwwgQwf8XJsN+MtMMoldnDWFPxBtKj2QXk9x+xIOQdBtr3mFJj2w+P6GE1A+2N+av0Nz5axrWVOt3Qum4r8UKM3OvcRdUIReMkMlDZ0ROfHRghwcAqubG6KQhTTgyFn7rOb61WdxRnLsTnoWJKbb9ktfjw=', // made through pbkdf2
+    displayName: 'TestNickname',
+    salt: 'fWgRjxDpwDH5KDYACd2wl+PCnidheQl6ce7N/b+V/2FnxIjU1clm8NtV087add7O56zHdPaXsiYF0NgilfQqxA==',
 };
 
 app.post('/auth/login', (req, res) => {
 
     let username = req.body.username,
         passwd = req.body.password;
-    if (username === sampleUser.username && md5(passwd+salt) === sampleUser.passwd) {
-        req.session.displayName = sampleUser.displayName;
-        req.session.save( (err) => {
-            res.redirect('/welcome')
-        });
+    
+    if (username === sampleUser.username) {
+        return hasher({password: passwd, salt: sampleUser.salt}, function(err, pass, salt, hash) {
+            if (hash === sampleUser.passwd) {
+                // 인증성공
+                req.session.displayName = sampleUser.displayName;
+                req.session.save( (err) => {
+                    res.redirect('/welcome');
+                });
+            }
+            else {
+                // 인증실패
+                res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`)
+
+            }
+        })
     }
-    else {
-        res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`);
-    }
+    // if (username === sampleUser.username && md5(passwd+salt) === sampleUser.passwd) {
+    //     req.session.displayName = sampleUser.displayName;
+    //     req.session.save( (err) => {
+    //         res.redirect('/welcome')
+    //     });
+    // }
+    // else {
+    //     res.send(`No User Found <br> <a href="/auth/login">Go To Login Page</a>`);
+    // }
 })
 app.get('/auth/login', (req, res) => {
     let output = `
