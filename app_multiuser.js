@@ -72,16 +72,11 @@ app.get('/welcome', (req, res) => {
     };
 });
 
-// > const md5 = require('md5');
-// undefined
-// > let salt = "aetaeywaecaeate131241";
-// undefined
-// > let pwd = '111';
-// undefined
-// > md5(pwd+salt)
-// '9e02e269cfa207501059052f868a5291'
-// > 
-let salt = "aetaeywaecaeate131241";
+
+function enc(passwd, salt) {
+    return sha256(passwd+salt)
+};
+
 let sampleUser = {
     username: 'TestUser',
     passwd: '9e02e269cfa207501059052f868a5291', // made through md5 hash(Not used anymore) with salt
